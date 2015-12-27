@@ -1,0 +1,111 @@
+<html>
+  <head>
+    <script>
+function generate_idea()
+{
+  var concepts = [
+    "advice", 4,
+    "app", 5,
+    "artificial intelligence", 3,
+    "book", 5,
+    "career advice", 4,
+    "cause prioritization", 3,
+    "celebrity-backed", 2,
+    "community", 3,
+    "compassionate", 1,
+    "direct", 1,
+    "donor-advised", 2,
+    "evaluator", 5,
+    "existential risk", 3,
+    "exponential", 2,
+    "foundational", 2,
+    "fund", 4,
+    "fundraising", 3,
+    "global catastrophic risk", 3,
+    "hacking", 5,
+    "incubator", 6,
+    "infinite", 1,
+    "investigative", 2,
+    "life", 3,
+    "lifestyle", 3,
+    "long-term", 2,
+    "malaria", 3,
+    "maximizer", 6,
+    "meta", 1,
+    "negative", 2,
+    "nonhuman", 2,
+    "nootropics", 3,
+    "pledge", 6,
+    "policy", 4,
+    "power", 2,
+    "project", 5,
+    "rational", 2,
+    "rationality", 3,
+    "research", 4,
+    "robo", 2,
+    "schistosomiasis", 3,
+    "secretive", 1,
+    "signalling", 4,
+    "social media", 3,
+    "squares", 6,
+    "university-based", 1,
+    "vegan", 2,
+    "volunteering", 3,
+    "wild animal", 2,
+    "workforce", 5
+    ];
+
+  var num_concepts = concepts.length / 2;
+  var chosen = [];
+  var max_ordering = 0;
+
+  // Choose some concepts, making sure we don't include duplicates
+  while (chosen.length < 3 || max_ordering <= 2)
+  {
+    var j = Math.floor(Math.random() * num_concepts);
+
+    var concept = [concepts[2*j+1], concepts[2*j]];
+    var already = false;
+
+    for (var i = 0; i < chosen.length; i++)
+    {
+      if (chosen[i][0] == concept[0] && chosen[i][1] == concept[1])
+      {
+        already = true;
+      }
+    }
+
+    if (!already)
+    {
+      chosen.push(concept);
+      if (concept[0] > max_ordering)
+      {
+        max_ordering = concept[0];
+      }
+    }
+  }
+
+  // Sort them
+  chosen.sort();
+
+  // Return
+  var result = "";
+  for (var i = 0; i < chosen.length; i++)
+  {
+    result = result + chosen[i][1] + " ";
+  }
+  return result;
+}
+
+function generate_and_print_idea()
+{
+  var idea = generate_idea();
+  document.getElementById("idea").innerHTML = idea;
+}
+    </script>
+  </head>
+  <body>
+    <p id="idea"></p>
+    <input type="button" onclick="generate_and_print_idea()" value="Generate idea">
+  </body>
+</html>
