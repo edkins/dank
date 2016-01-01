@@ -1,0 +1,233 @@
+<html>
+<head>
+<script>
+
+var h_concepts = undefined;
+var y_concepts = undefined;
+
+function choose(concepts)
+{
+  return concepts[Math.floor(Math.random() * concepts.length)];
+}
+
+function cap(concept)
+{
+  return concept.charAt(0).toUpperCase() + concept.slice(1);
+}
+
+function the(concept)
+{
+  if (concept.startsWith('the '))
+  {
+    return concept;
+  }
+  else
+  {
+    return 'the ' + concept;
+  }
+}
+
+// People add concepts to each others' databases
+function h_add_concept(concept)
+{
+  if (!(concept in y_concepts))
+  {
+    y_concepts.push(concept);
+  }
+}
+
+function y_add_concept(concept)
+{
+  if (!(concept in h_concepts))
+  {
+    h_concepts.push(concept);
+  }
+}
+
+function h_signalling(x, y)
+{
+  h_add_concept('signaling');
+  h_add_concept(x);
+  h_add_concept(y);
+  return cap(x) + " is not about " + y + ". It is about signaling.";
+}
+
+function h_prediction_market(x, y)
+{
+  h_add_concept('prediction markets');
+  h_add_concept(x);
+  return "We need a prediction market in " + x + ".";
+}
+
+function h_ems(x)
+{
+  h_add_concept('ems');
+  h_add_concept('need');
+  h_add_concept(x);
+  return "Ems would have no need for " + x + "."
+}
+
+function h_status(x, y)
+{
+  h_add_concept('status');
+  h_add_concept(x);
+  h_add_concept(y);
+  return cap(x) + " is high status. " + cap(y) + " is low status.";
+}
+
+function h_near(x, y)
+{
+  h_add_concept('near');
+  h_add_concept('far');
+  return cap(x) + " is near. " + cap(y) + " is far.";
+}
+
+function hanson()
+{
+  var x = choose(h_concepts);
+  var y = choose(h_concepts);
+  var func = choose([
+      h_signalling,
+      h_signalling,
+      h_signalling,
+      h_prediction_market,
+      h_ems,
+      h_status,
+      h_near]);
+  return func(x, y);
+}
+
+function y_universe_tiled(x, y)
+{
+  y_add_concept('the universe');
+  y_add_concept('tiles');
+  y_add_concept(x);
+  return "Do that and you'll end up with a universe tiled with " + x + ".";
+}
+
+function y_map()
+{
+  y_add_concept('the map');
+  y_add_concept('territory');
+  return "The map is not the territory.";
+}
+
+function y_solved(x, y)
+{
+  y_add_concept('belief');
+  y_add_concept('solutions');
+  y_add_concept(x);
+  return "I believe we have solved " + x + ".";
+}
+
+function y_potter(x, y)
+{
+  y_add_concept('Harry Potter');
+  y_add_concept(x);
+  y_add_concept(y);
+  return "Harry Potter and " + the(x) + " of " + y + ".";
+}
+
+function yudkowsky()
+{
+  var x = choose(y_concepts);
+  var y = choose(y_concepts);
+  var func = choose([
+      y_universe_tiled,
+      y_map,
+      y_solved,
+      y_potter
+      ]);
+  return func(x, y);
+}
+
+function debate(topic)
+{
+  for (var i = 0; i < 2; i++)
+  {
+    h_concepts.push(topic);
+    y_concepts.push(topic);
+  }
+
+  var text = '';
+  var prev_turn = undefined;
+  
+  for (var i = 0; i < 20; i++)
+  {
+    do
+    {
+      turn = choose(['h', 'y']);
+    } while (turn == prev_turn);
+    prev_turn = turn;
+
+    if (turn == 'h')
+    {
+      text += "<b>Hanson</b>: " + hanson() + "<br>\n";
+    }
+    else if (turn == 'y')
+    {
+      text += "<b>Yudkowsky</b>: " + yudkowsky() + "<br>\n";
+    }
+  }
+  return text;
+}
+
+function arbitrary_topic()
+{
+  var suggested_topics = [
+    'Arnold Schwarzenegger',
+    'Brian Tomasik',
+    'candles',
+    'CFAR',
+    'chickens',
+    'dank memes',
+    'diet',
+    'foom',
+    'investment advice',
+    'mealsquares',
+    'Nick Bostrom',
+    'nootropics'
+    ];
+  document.getElementById('topic').value = choose(suggested_topics);
+}
+
+function initialize_debate()
+{
+  h_concepts = [
+    'Eliezer',
+    'academia',
+    'charity',
+    'countersignaling',
+    'the future',
+    'hypocrisy',
+    'politics',
+    'regulation'];
+
+  y_concepts = [
+    'Robin',
+    'AI',
+    'dust specks',
+    'math',
+    'quantum mechanics',
+    'rationality',
+    'zombies'];
+}
+
+function do_debate()
+{
+  initialize_debate();
+  var topic = document.getElementById('topic').value;
+  var debate_text = debate(topic);
+  var heading = '<h1>The Hanson vs. Yudkowsky ' + topic + ' debate</h1>\n';
+  document.getElementById('debate').innerHTML = heading + debate_text;
+}
+
+</script>
+<title>Hanson vs. Yudkowsky debates</title>
+</head>
+<body onload="arbitrary_topic()">
+  <p id="debate"></p>
+  Debate topic: <input type="text" id="topic"><br>
+  <input type="button" value="Debate!" onclick="do_debate()"><br>
+</body>
+</html>
