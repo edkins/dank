@@ -1,0 +1,10 @@
+Fetch the markdown from here: https://jb55.com/lesswrong/
+
+Place in a subdirectory called markdown-source
+
+Then run:
+
+pip2 install markovify
+pip2 install BeautifulSoup
+pip2 install markdown
+python2 process.py
