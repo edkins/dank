@@ -11,7 +11,7 @@ set -ex
 add-apt-repository ppa:certbot/certbot
 apt update
 apt upgrade
-apt install certbox
+apt install certbot
 apt install nginx
 
 cp ./opendank-http /var/www/sites-available/opendank
