@@ -2,6 +2,8 @@
 
 set -ex
 
+email=$1
+
 # Get a $5 droplet from Digital Ocean
 # ssh in with root
 # git clone https://github.com/edkins/dank.git
@@ -16,12 +18,14 @@ apt install nginx
 
 cp ./opendank-http /etc/nginx/sites-available/opendank
 ln -s /etc/nginx/sites-available/opendank /etc/nginx/sites-enabled/opendank
+rm /etc/nginx/sites-enabled/default
 
 mkdir -p /var/www/opendank
 cp -r ./www/* /var/www/opendank
 
 nginx -s reload
 
-#certbot certonly --webroot -w /var/www/opendank -d opendank.org -d www.opendank.org -d api.opendank.org
+certbot certonly -n --webroot -w /var/www/opendank -d opendank.org -d www.opendank.org -d api.opendank.org --agree-tos --email "$email"
 
-
+cat ./opendank-http ./opendank-https > /etc/nginx/sites-available/opendank
+nginx -s reload
