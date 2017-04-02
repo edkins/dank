@@ -1,0 +1,12 @@
+server {
+	listen 80 default_server;
+	listen [::]:80 default_server;
+
+	index index.html;
+	charset utf8;
+
+	location /.well-known {
+	}
+
+	return 301 https://$host$request_uri;
+}

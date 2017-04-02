@@ -1,0 +1,25 @@
+#!/bin/bash
+
+set -ex
+
+# Get a $5 droplet from Digital Ocean
+# ssh in with root
+# git clone https://github.com/edkins/dank.git
+# cd dank/lkb6
+# ./install
+
+add-apt-repository ppa:certbot/certbot
+apt update
+apt upgrade
+apt install certbox
+apt install nginx
+
+cp ./opendank-http /var/www/sites-available/opendank
+ln -s /etc/nginx/sites-available/opendank /etc/nginx/sites-enabled/opendank
+
+mkdir -p /var/www/opendank
+cp -r ./www/* /var/www/opendank
+
+#certbot certonly --webroot -w /var/www/opendank -d opendank.org -d www.opendank.org -d api.opendank.org
+
+
