@@ -1,0 +1,47 @@
+<html>
+<head>
+<meta charset="utf-8">
+<script>
+function poll()
+{
+	xhr = new XMLHttpRequest();
+	xhr.addEventListener('load', updateTable);
+	xhr.open('GET', '/api/shenanigans/lkb-666/summary')
+	xhr.send();
+}
+
+function updateTable()
+{
+	var obj = JSON.parse(this.responseText);
+	var types = ['LIKE','LOVE','HAHA','WOW','SAD','ANGRY']
+	var innerHTML = ''
+	for (var i = 0; i < 6; i++)
+	{
+		var type = types[i];
+		innerHTML += '<tr><td>' + type + '</td><td>' + obj.summary[type] + '</td></tr>';
+	}
+	document.getElementById('tbody').innerHTML = innerHTML;
+}
+
+function start()
+{
+	window.setInterval(poll, 1000);
+}
+</script>
+</head>
+<body onload="start()">
+<h1>OpenDank: lkb-666</h1>
+<p>
+An eccentric technolologist will donate $66,666 to the <a href="https://intelligence.org">Machine Intelligence Research Institute</a> if a particular meme receives 111 of each kind of reaction on Facebook.
+</p>
+<p>
+<strong>Important note:</strong> we like him, so please abide by good faith and ethical conduct here. In particular, inviting extra people into the group to beef up the numbers isn't allowed.
+</p>
+<h2>Current reaction counts</h2>
+<table>
+<tbody id="tbody">
+</tbody>
+</table
+</body>
+</html>
+
