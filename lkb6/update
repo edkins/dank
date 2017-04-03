@@ -1,0 +1,6 @@
+#!/bin/bash
+set -ex
+
+cat ./opendank-http ./opendank-https > /etc/nginx/sites-available/opendank
+cp -r ./www/* /var/www/opendank
+nginx -s reload
