@@ -18,8 +18,7 @@ class StatusCodeException(Exception):
 class Datastore():
 	def __init__(self):
 		self.token = None
-		self.reactions = []
-		self.summary = self.empty_summary()
+		self.reactions = None
 
 	def set_token(self, token):
 		self.token = token
@@ -30,15 +29,11 @@ class Datastore():
 	def get_reactions(self):
 		return self.reactions
 
-	def set_reactions(self, reactions):
-		self.reactions = reactions
+	def set_reactions(self, reactions, timestamp):
 		summary = self.empty_summary()
 		for reaction in reactions:
 			summary[reaction['type']] += 1
-		self.summary = summary
-
-	def get_summary(self):
-		return self.summary
+		self.reactions = {"reactions":reactions, "summary":summary, "timestamp":timestamp}
 
 	def empty_summary(self):
 		return {'LIKE':0,'LOVE':0,'HAHA':0,'WOW':0,'SAD':0,'ANGRY':0}
@@ -62,8 +57,11 @@ class OpenDankHandler(BaseHTTPRequestHandler):
 
 	def do_GET(self):
 		if self.path == '/api/shenanigans/lkb-666/summary':
-			summary = self.db().get_summary()
-			result = {"meta":{"epistemicStatus":"sandbox"}, "summary":summary}
+			reactions = self.db().get_reactions()
+			if reactions == None:
+				result = {"meta":{"epistemicStatus":"missing"}}
+			else:
+				result = {"meta":{"epistemicStatus":"sandbox","lastUpdated":reactions['timestamp']}, "summary":reactions['summary']}
 			self.json(result)
 		else:
 			self.not_found()
@@ -134,8 +132,10 @@ class PollingThread(threading.Thread):
 		if token == None:
 			print('Reminder: no token yet')
 			return
+		timestamp = int(time.time()*1000)
 		reactions = self.get_all_reactions(token)
-		self.db().set_reactions(reactions)
+		print('updating in db with timestamp ' + str(timestamp))
+		self.db().set_reactions(reactions, timestamp)
 
 	def db(self):
 		global db

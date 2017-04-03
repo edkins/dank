@@ -2,25 +2,81 @@
 <head>
 <meta charset="utf-8">
 <script>
+
+var retries = 0;
+var patience = 1;
+
 function poll()
 {
-	xhr = new XMLHttpRequest();
-	xhr.addEventListener('load', updateTable);
-	xhr.open('GET', '/api/shenanigans/lkb-666/summary')
-	xhr.send();
+	retries--;
+	if (retries <= 0)
+	{
+		retries = 0;
+		xhr = new XMLHttpRequest();
+		xhr.addEventListener('load', handleResult);
+		xhr.addEventListener('error', handleError);
+		xhr.addEventListener('abort', handleAbort);
+		xhr.open('GET', '/api/shenanigans/lkb-666/summary');
+		xhr.send();
+	}
 }
 
-function updateTable()
+function handleError()
 {
-	var obj = JSON.parse(this.responseText);
-	var types = ['LIKE','LOVE','HAHA','WOW','SAD','ANGRY']
-	var innerHTML = ''
-	for (var i = 0; i < 6; i++)
+	document.getElementById('status').textContent = 'connection error';
+}
+function handleAbort()
+{
+	document.getElementById('status').textContent = 'aborted';
+}
+
+function handleResult()
+{
+	retries = patience;
+	patience = Math.min(patience * 2, 60);
+	if (this.status == 200)
 	{
-		var type = types[i];
-		innerHTML += '<tr><td>' + type + '</td><td>' + obj.summary[type] + '</td></tr>';
+		var obj = JSON.parse(this.responseText);
+		if ('summary' in obj)
+		{
+			var innerHTML = ''
+			var types = ['LIKE','LOVE','HAHA','WOW','SAD','ANGRY']
+			for (var i = 0; i < 6; i++)
+			{
+				var type = types[i];
+				innerHTML += '<tr><td>' + type + '</td><td>' + obj.summary[type] + '</td></tr>';
+			}
+			document.getElementById('tbody').innerHTML = innerHTML;
+			document.getElementById('lastUpdated').textContent = toDateString(obj.meta.lastUpdated);
+			patience = 1;
+		}
+		document.getElementById('status').textContent = obj.meta.epistemicStatus;
 	}
-	document.getElementById('tbody').innerHTML = innerHTML;
+	else
+	{
+		if (this.status == 502)
+		{
+			status = 'bad gateway';
+		}
+		else
+		{
+			status = 'error ' + this.status;
+		}
+
+		document.getElementById('status').textContent = status;
+	}
+}
+
+function toDateString(n)
+{
+	if (n == undefined)
+	{
+		return '';
+	}
+	else
+	{
+		return new Date(n) + '';
+	}
 }
 
 function start()
@@ -41,7 +97,9 @@ An eccentric technolologist will donate $66,666 to the <a href="https://intellig
 <table>
 <tbody id="tbody">
 </tbody>
-</table
+</table>
+<span id="lastUpdated"></span><br>
+<span id="status">Not gathered yet</span>
 </body>
 </html>
 
