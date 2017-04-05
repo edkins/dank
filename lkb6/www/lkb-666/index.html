@@ -51,6 +51,7 @@ function handleResult()
 			patience = 1;
 		}
 		document.getElementById('status').textContent = obj.meta.epistemicStatus;
+		document.getElementById('warning').textContent = (obj.meta.epistemicStatus === 'sandbox') ? 'THIS IS FROM THE SANDBOX NOT THE REAL POST' : '';
 	}
 	else
 	{
@@ -64,6 +65,7 @@ function handleResult()
 		}
 
 		document.getElementById('status').textContent = status;
+		document.getElementById('warning').textContent = '';
 	}
 }
 
@@ -94,6 +96,7 @@ An eccentric technolologist will donate $66,666 to the <a href="https://intellig
 <strong>Important note:</strong> we like him, so please abide by good faith and ethical conduct here. In particular, inviting extra people into the group to beef up the numbers isn't allowed.
 </p>
 <h2>Current reaction counts</h2>
+<span id="warning" style="font-size:x-large;color:red"></span>
 <table>
 <tbody id="tbody">
 </tbody>
