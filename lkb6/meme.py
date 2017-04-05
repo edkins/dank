@@ -7,6 +7,7 @@ import threading
 import time
 import hashlib
 import binascii
+import re
 from Crypto.Cipher import AES
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -14,6 +15,8 @@ admin_stuff_schema = json.load(open('www/schemas/admin_stuff'))
 credentials_schema = json.load(open('www/schemas/credentials'))
 empty_schema = json.load(open('www/schemas/empty'))
 lkb_666_summary_schema = json.load(open('www/schemas/lkb_666_summary'))
+
+re_boring = re.compile(r'127.0.0.1 - - \[[0-9]{2}\/[A-Z][a-z]+\/[0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}\] "GET \/api\/shenanigans\/lkb-666\/summary HTTP\/1.0" 200 -')
 
 def read_json_file(filename, schema):
 	with open(filename) as file:
@@ -127,7 +130,7 @@ class OpenDankHandler(BaseHTTPRequestHandler):
 			self.internal_error()
 			return
 
-		self.db().set_stuff(app_id, app_secret, token, postId, obj['pollInterval'])
+		self.db().set_stuff(app_id, app_secret, long_token, postId, obj['pollInterval'])
 		self.json(empty_schema, {})
 
 	def decrypt(self, password, enc):
@@ -179,10 +182,19 @@ class OpenDankHandler(BaseHTTPRequestHandler):
 		global db
 		return db
 
+	# override
+	def log_message(self, format, *args):
+		if len(args) == 3 and args[0].startswith('GET /api/shenanigans/lkb-666/summary HTTP/') and args[1] == '200' and args[2] == '-':
+			# way too many of these requests to want to log them all
+			pass
+		else:
+			print(format % args)
+
 db = None
 
 class PollingThread(threading.Thread):
 	def run(self):
+		self.slow = False
 		try:
 			print('Starting polling thread')
 			while True:
@@ -190,6 +202,8 @@ class PollingThread(threading.Thread):
 				stuff = self.db().get_stuff()
 				if stuff == None:
 					time.sleep(1)
+				elif self.slow:
+					time.sleep(max(60,stuff['pollInterval']))
 				else:
 					time.sleep(stuff['pollInterval'])
 		except KeyboardInterrupt:
@@ -202,8 +216,12 @@ class PollingThread(threading.Thread):
 			return
 		timestamp = int(time.time()*1000)
 		reactions = self.get_all_reactions(stuff['token'], stuff['postId'])
-		print('updating in db with timestamp ' + str(timestamp))
-		self.db().set_reactions(reactions, timestamp)
+		if reactions != None:
+			self.slow = False
+			print('updating in db with timestamp ' + str(timestamp))
+			self.db().set_reactions(reactions, timestamp)
+		else:
+			self.slow = True
 
 	def db(self):
 		global db
@@ -216,7 +234,7 @@ class PollingThread(threading.Thread):
 			r = requests.get(url)
 			if r.status_code != 200:
 				print(r.text)
-				raise StatusCodeException(r.status_code)
+				return None
 			obj = r.json()
 			result += obj['reactions']['data']
 			if 'next' not in obj['reactions']['paging']:

@@ -5,4 +5,4 @@ cat ./opendank-http ./opendank-https > /etc/nginx/sites-available/opendank
 cp -r ./www/* /var/www/opendank
 nginx -s reload
 
-python3 meme.py
+python3 meme.py | tee -a log
