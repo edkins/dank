@@ -1,0 +1,147 @@
+<html>
+<head>
+<script>
+var token = undefined;
+function pageload()
+{
+	FB.getLoginStatus(function(response) {
+		if (response.status === 'connected')
+		{
+			setToken(response.authResponse);
+		}
+		else
+		{
+			setToken(undefined);
+		}
+	});
+}
+function setToken(authResponse)
+{
+	if (authResponse == undefined)
+	{
+		document.getElementById('go').disabled = true;
+		token = undefined;
+	}
+	else
+	{
+		document.getElementById('go').disabled = false;
+		token = authResponse.accessToken;
+	}
+}
+function fbpeace()
+{
+	FB.login(function(response) {
+		if (response.authResponse.grantedScopes.split(',').indexOf('user_managed_groups') !== -1)
+		{
+			setToken(response.authResponse);
+		}
+		else
+		{
+			setToken(undefined);
+		}
+	}, {scope:'user_managed_groups', return_scopes:true});
+}
+function adminStuff(request)
+{
+	xhr = new XMLHttpRequest();
+	xhr.addEventListener('load', handleResult);
+	xhr.addEventListener('error', handleError);
+	xhr.addEventListener('abort', handleError);
+	xhr.open('POST', '/api/admin/stuff');
+	xhr.setRequestHeader("Content-type", "application/json");
+	xhr.send(JSON.stringify(request));
+}
+function handleError()
+{
+	alert('error');
+}
+function handleResult()
+{
+	if (this.status == 200)
+	{
+		alert('ok');
+	}
+	else if (this.status == 400)
+	{
+		alert('bad request');
+	}
+	else if (this.status == 401)
+	{
+		alert('not authorized');
+	}
+	else
+	{
+		alert('error ' + this.status);
+	}
+}
+
+function go()
+{
+	if (token == undefined)
+	{
+		setToken(undefined);
+		return;
+	}
+	var password = document.getElementById('password').value;
+	if (password == '')
+	{
+		alert('You need a password though');
+		return;
+	}
+	var username = document.getElementById('username').value;
+	if (username == '')
+	{
+		alert('You need a username though');
+		return;
+	}
+	var postId = document.getElementById('postId').value;
+	if (postId == '')
+	{
+		alert('You need to specify a post id');
+		return;
+	}
+	var pollInterval = document.getElementById('pollInterval').value;
+	if (pollInterval == '')
+	{
+		alert('You need to specify a polling interval');
+		return;
+	}
+	obj = {}
+	obj['username'] = username;
+	obj['password'] = password;
+	obj['postId'] = postId;
+	obj['token'] = token;
+	obj['pollInterval'] = parseInt(pollInterval);
+	adminStuff(obj);
+}
+</script>
+</head>
+<body>
+<script>
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '312279525854012',
+      xfbml      : true,
+      version    : 'v2.8'
+    });
+    FB.AppEvents.logPageView();
+    pageload();
+  };
+
+  (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "//connect.facebook.net/en_US/sdk.js";
+     fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+<h1>Admin</h1>
+<p>For those requiring <em>admin</em> access.</p>
+Admin username: <input type="text" id="username"><br>
+Admin password: <input type="password" id="password"><br>
+Post id: <input type="text" id="postId"><br>
+Polling interval: <input type="text" id="pollInterval"><br>
+<input type="button" value="Make peace with Facebook" onclick="fbpeace()"><input type="button" value="Go" onclick="go()" disabled="true" id="go">
+</body>
+</html

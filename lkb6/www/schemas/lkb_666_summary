@@ -1,0 +1,29 @@
+{
+	"type":"object",
+	"properties": {
+		"meta": {
+			"type": "object",
+			"properties": {
+				"epistemicStatus": {"enum": ["missing","sandbox","plausible"]},
+				"lastUpdated": {"type": "integer"}
+			},
+			"required": ["epistemicStatus"],
+			"additionalProperties": false
+		},
+		"summary": {
+			"type": "object",
+			"properties": {
+				"like": {"type":"integer"},
+				"love": {"type":"integer"},
+				"haha": {"type":"integer"},
+				"wow": {"type":"integer"},
+				"sad": {"type":"integer"},
+				"angry": {"type":"integer"}
+			},
+			"required": ["like","love","haha","wow","sad","angry"],
+			"additionalProperties": false
+		}
+	},
+	"required": ["meta"],
+	"additionalProperties": false
+}

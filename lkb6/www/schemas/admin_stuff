@@ -1,0 +1,12 @@
+{
+	"type": "object",
+	"properties": {
+		"username": {"type": "string"},
+		"password": {"type": "string"},
+		"token": {"type": "string"},
+		"postId": {"type": "string"},
+		"pollInterval": {"type": "number"}
+	},
+	"required": ["username","password","token","postId","pollInterval"],
+	"additionalProperties": false
+}
