@@ -1,6 +1,7 @@
 #!/bin/bash
 set -ex
 
+git pull
 cat ./opendank-http ./opendank-https > /etc/nginx/sites-available/opendank
 cp -r ./www/* /var/www/opendank
 nginx -s reload
