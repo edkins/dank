@@ -1,0 +1,2 @@
+google-chrome --pack-extension=./memeraiser-chrome --pack-extension-key=./memeraiser-chrome.pem
+mv memeraiser-chrome.crx www/lkb-666

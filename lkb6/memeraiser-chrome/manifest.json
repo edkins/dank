@@ -3,7 +3,7 @@
 
   "name": "Memeraiser dashboard",
   "description": "Shows how close we are to the 111 target",
-  "version": "1.0",
+  "version": "0.1",
   "background": {
     "scripts": ["bg.js"]
   },
@@ -13,5 +13,6 @@
   },
   "permissions": [
     "https://opendank.org/"
-  ]
+  ],
+  "update_url": "https://opendank.org/lkb-666/updates.xml"
 }
