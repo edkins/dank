@@ -48,6 +48,7 @@ function handleResult()
 			}
 			document.getElementById('tbody').innerHTML = innerHTML;
 			document.getElementById('lastUpdated').textContent = toDateString(obj.meta.lastUpdated);
+			retries = 1;
 			patience = 1;
 		}
 		document.getElementById('status').textContent = obj.meta.epistemicStatus;
