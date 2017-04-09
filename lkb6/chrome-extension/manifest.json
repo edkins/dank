@@ -1,0 +1,17 @@
+{
+  "manifest_version": 2,
+
+  "name": "Memeraiser dashboard",
+  "description": "Shows how close we are to the 111 target",
+  "version": "1.0",
+  "background": {
+    "scripts": ["bg.js"]
+  },
+  "browser_action": {
+    "default_icon": "greenclip.png",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "https://opendank.org/"
+  ]
+}
