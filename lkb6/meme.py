@@ -33,8 +33,8 @@ class Datastore():
 		self.stuff = None
 		self.reactions = None
 
-	def set_stuff(self, appId, appSecret, token, postId, pollInterval):
-		self.stuff = {"appId":appId, "appSecret":appSecret, "token":token, "postId":postId, "pollInterval":pollInterval}
+	def set_stuff(self, appId, appSecret, token, postId, pollInterval, real_post):
+		self.stuff = {"appId":appId, "appSecret":appSecret, "token":token, "postId":postId, "pollInterval":pollInterval, "realPost":real_post}
 
 	def get_stuff(self):
 		return self.stuff
@@ -42,11 +42,11 @@ class Datastore():
 	def get_reactions(self):
 		return self.reactions
 
-	def set_reactions(self, reactions, timestamp):
+	def set_reactions(self, reactions, timestamp, epistemic_status):
 		summary = self.empty_summary()
 		for reaction in reactions:
 			summary[reaction['type'].lower()] += 1
-		self.reactions = {"reactions":reactions, "summary":summary, "timestamp":timestamp}
+		self.reactions = {"reactions":reactions, "summary":summary, "timestamp":timestamp, "epistemicStatus": epistemic_status}
 
 	def empty_summary(self):
 		return {'like':0,'love':0,'haha':0,'wow':0,'sad':0,'angry':0}
@@ -78,7 +78,7 @@ class OpenDankHandler(BaseHTTPRequestHandler):
 			if reactions == None:
 				result = {"meta":{"epistemicStatus":"missing"}}
 			else:
-				result = {"meta":{"epistemicStatus":"sandbox","lastUpdated":reactions['timestamp']}, "summary":reactions['summary']}
+				result = {"meta":{"epistemicStatus":reactions['epistemicStatus'],"lastUpdated":reactions['timestamp']}, "summary":reactions['summary']}
 			self.json(lkb_666_summary_schema, result)
 		else:
 			self.not_found()
@@ -112,7 +112,7 @@ class OpenDankHandler(BaseHTTPRequestHandler):
 		token = obj['token']
 		postId = obj['postId']
 		try:
-			self.get_reactions(token, postId)
+			self.try_getting_some_reactions(token, postId)
 		except StatusCodeException:
 			print('Could not set token, it\'s probably wrong')
 			self.bad_request()
@@ -124,13 +124,15 @@ class OpenDankHandler(BaseHTTPRequestHandler):
 		print('Converting to long token')
 		long_token = self.convert_to_long_token(app_id, app_secret, token)
 		try:
-			self.get_reactions(long_token, postId)
+			self.try_getting_some_reactions(long_token, postId)
 		except StatusCodeException:
 			print('Long token appeared not to work for some reason??')
 			self.internal_error()
 			return
 
-		self.db().set_stuff(app_id, app_secret, long_token, postId, obj['pollInterval'])
+		real_post = credentials['realPostId'] == postId
+
+		self.db().set_stuff(app_id, app_secret, long_token, postId, obj['pollInterval'], real_post)
 		self.json(empty_schema, {})
 
 	def decrypt(self, password, enc):
@@ -169,7 +171,7 @@ class OpenDankHandler(BaseHTTPRequestHandler):
 
 		return r.json()['access_token']
 
-	def get_reactions(self,token,postId):
+	def try_getting_some_reactions(self,token,postId):
 		url = 'https://graph.facebook.com/v2.8/'+postId+'?access_token='+token+'&fields=reactions&format=json&method=get&pretty=0'
 
 		r = requests.get(url)
@@ -219,7 +221,8 @@ class PollingThread(threading.Thread):
 		if reactions != None:
 			self.slow = False
 			print('updating in db with timestamp ' + str(timestamp))
-			self.db().set_reactions(reactions, timestamp)
+			epistemic_status = 'plausible' if stuff['realPost'] else 'sandbox'
+			self.db().set_reactions(reactions, timestamp, epistemic_status)
 		else:
 			self.slow = True
 
@@ -229,17 +232,17 @@ class PollingThread(threading.Thread):
 		
 	def get_all_reactions(self,token,postId):
 		result = []
-		url = 'https://graph.facebook.com/v2.8/'+postId+'?access_token='+token+'&fields=reactions&format=json&method=get&pretty=0'
+		url = 'https://graph.facebook.com/v2.8/'+postId+'/reactions?access_token='+token+'&format=json&method=get&pretty=0'
 		while True:
 			r = requests.get(url)
 			if r.status_code != 200:
 				print(r.text)
 				return None
 			obj = r.json()
-			result += obj['reactions']['data']
-			if 'next' not in obj['reactions']['paging']:
+			result += obj['data']
+			if 'next' not in obj['paging']:
 				return result
-			url = obj['reactions']['paging']['next']
+			url = obj['paging']['next']
 
 
 def run():
