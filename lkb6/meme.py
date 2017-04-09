@@ -136,7 +136,7 @@ class OpenDankHandler(BaseHTTPRequestHandler):
 		real_post = credentials['realPostId'] == postId
 		poll_interval = obj['pollInterval']
 
-		stuff = {"appId":app_id, "appSecret":app_secret, "token":token, "postId":postId, "pollInterval":poll_interval, "realPost":real_post}
+		stuff = {"appId":app_id, "appSecret":app_secret, "token":long_token, "postId":postId, "pollInterval":poll_interval, "realPost":real_post}
 		self.write_token_to_file(stuff)
 
 		self.db().set_stuff(stuff)
