@@ -239,7 +239,6 @@ class PollingThread(threading.Thread):
 		reactions = self.get_reaction_summaries(stuff['token'], stuff['postId'])
 		if reactions != None:
 			self.slow = False
-			print('updating in db with timestamp ' + str(timestamp))
 			epistemic_status = 'plausible' if stuff['realPost'] else 'sandbox'
 			self.db().set_reactions(reactions, timestamp, epistemic_status)
 		else:
