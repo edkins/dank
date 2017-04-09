@@ -15,6 +15,7 @@ admin_stuff_schema = json.load(open('www/schemas/admin_stuff'))
 credentials_schema = json.load(open('www/schemas/credentials'))
 empty_schema = json.load(open('www/schemas/empty'))
 lkb_666_summary_schema = json.load(open('www/schemas/lkb_666_summary'))
+fb_token_schema = json.load(open('www/schemas/fb_token'))
 
 re_boring = re.compile(r'127.0.0.1 - - \[[0-9]{2}\/[A-Z][a-z]+\/[0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}\] "GET \/api\/shenanigans\/lkb-666\/summary HTTP\/1.0" 200 -')
 
@@ -23,6 +24,11 @@ def read_json_file(filename, schema):
 		obj = json.load(file)
 		jsonschema.validate(obj, schema)
 		return obj
+
+def write_json_file(filename, schema, obj):
+	jsonschema.validate(obj, schema)
+	with open(filename,'w') as file:
+		json.dump(obj, file)
 
 class StatusCodeException(Exception):
 	def __init__(self, code):
@@ -33,8 +39,8 @@ class Datastore():
 		self.stuff = None
 		self.reactions = None
 
-	def set_stuff(self, appId, appSecret, token, postId, pollInterval, real_post):
-		self.stuff = {"appId":appId, "appSecret":appSecret, "token":token, "postId":postId, "pollInterval":pollInterval, "realPost":real_post}
+	def set_stuff(self, stuff):
+		self.stuff = stuff
 
 	def get_stuff(self):
 		return self.stuff
@@ -43,10 +49,7 @@ class Datastore():
 		return self.reactions
 
 	def set_reactions(self, reactions, timestamp, epistemic_status):
-		summary = self.empty_summary()
-		for reaction in reactions:
-			summary[reaction['type'].lower()] += 1
-		self.reactions = {"reactions":reactions, "summary":summary, "timestamp":timestamp, "epistemicStatus": epistemic_status}
+		self.reactions = {"summary":reactions['summary'], "timestamp":timestamp, "epistemicStatus": epistemic_status}
 
 	def empty_summary(self):
 		return {'like':0,'love':0,'haha':0,'wow':0,'sad':0,'angry':0}
@@ -131,9 +134,16 @@ class OpenDankHandler(BaseHTTPRequestHandler):
 			return
 
 		real_post = credentials['realPostId'] == postId
+		poll_interval = obj['pollInterval']
 
-		self.db().set_stuff(app_id, app_secret, long_token, postId, obj['pollInterval'], real_post)
+		stuff = {"appId":app_id, "appSecret":app_secret, "token":token, "postId":postId, "pollInterval":poll_interval, "realPost":real_post}
+		self.write_token_to_file(stuff)
+
+		self.db().set_stuff(stuff)
 		self.json(empty_schema, {})
+
+	def write_token_to_file(self, stuff):
+		write_json_file('fb_token', fb_token_schema, stuff)
 
 	def decrypt(self, password, enc):
 		key = hashlib.sha256(bytes(password,'ascii')).digest()
@@ -196,6 +206,7 @@ db = None
 
 class PollingThread(threading.Thread):
 	def run(self):
+		self.try_loading_fb_token()
 		self.slow = False
 		try:
 			print('Starting polling thread')
@@ -212,12 +223,20 @@ class PollingThread(threading.Thread):
 			print('Exited with keyboard interrupt')
 			sys.exit()
 
+	def try_loading_fb_token(self):
+		try:
+			obj = read_json_file('fb_token', fb_token_schema)
+			self.db().set_stuff(obj)
+		except FileNotFoundError:
+			print('No fb_token file, you\'ll have to supply one using the admin page')
+			pass
+
 	def step(self):
 		stuff = self.db().get_stuff()
 		if stuff == None:
 			return
 		timestamp = int(time.time()*1000)
-		reactions = self.get_all_reactions(stuff['token'], stuff['postId'])
+		reactions = self.get_reaction_summaries(stuff['token'], stuff['postId'])
 		if reactions != None:
 			self.slow = False
 			print('updating in db with timestamp ' + str(timestamp))
@@ -229,6 +248,25 @@ class PollingThread(threading.Thread):
 	def db(self):
 		global db
 		return db
+
+	def get_reaction_summaries(self,token,postId):
+		fields='reactions.type(LIKE).summary(total_count).as(like),reactions.type(LOVE).summary(total_count).as(love),reactions.type(HAHA).summary(total_count).as(haha),reactions.type(WOW).summary(total_count).as(wow),reactions.type(SAD).summary(total_count).as(sad),reactions.type(ANGRY).summary(total_count).as(angry)'
+		url = 'https://graph.facebook.com/v2.8/'+postId+'?access_token='+token+'&fields='+fields
+		r = requests.get(url)
+		if r.status_code != 200:
+			print(r.text)
+			return None
+		obj = r.json()
+		return {
+			'summary':{
+				'like':obj['like']['summary']['total_count'],
+				'love':obj['love']['summary']['total_count'],
+				'haha':obj['haha']['summary']['total_count'],
+				'wow':obj['wow']['summary']['total_count'],
+				'sad':obj['sad']['summary']['total_count'],
+				'angry':obj['angry']['summary']['total_count']
+			}
+		}
 		
 	def get_all_reactions(self,token,postId):
 		result = []

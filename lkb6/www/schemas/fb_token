@@ -1,0 +1,15 @@
+{
+	"type": "object",
+	"properties": {
+		"appId": {"type": "string"},
+		"appSecret": {"type": "string"},
+		"token": {"type": "string"},
+		"postId": {"type": "string"},
+		"pollInterval": {"type": "number"},
+		"realPost": {"type": "boolean"}
+	},
+	"required": ["appId","appSecret","token","postId","pollInterval","realPost"],
+	"additionalProperties": false
+}
+
+
