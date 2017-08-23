@@ -41,13 +41,11 @@ var inputs = [
 	];
 
 var grammar = [
-	'root:{vp}|{vping}',
-	'vp:{verb} {np}|{vpinput}',
-	'vpinput:{Cartoonish Supervillain Goal (i.e. "take over the world")}|{A Verb and a Noun}',
-	'vping:{verbing} {np}',
+	'root:{vp}|{np} {vp}',
+	'vp:{verb} {np}|{vpinput}|{verbing} {np}',
+	'vpinput:{A Verb and a Noun}',
 	'np:{npsimple}',
-	'npsimple:{article} {noun}|{article} {adjective} {noun}|{propernoun}|{plural}|{adjective} {plural}|{npinput}|{number} {plural}',
-	'npinput:{Your Clearance Level}',
+	'npsimple:{article} {noun}|{article} {adjective} {noun}|{propernoun}|{plural}|{adjective} {plural}|{number} {plural}',
 	'article:a|the',
 	'number:{An Odd Number}|{An Even Number}|{Small Number Greater than 1}|{A Large Number}',
 	'noun:{A Noun}|{Another Noun}|{A type of Food}|{An Animal}|{A Greek Letter}|{A Body Part}|{Another Body Part}|{Object Class}',
