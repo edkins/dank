@@ -41,13 +41,14 @@ var inputs = [
 	];
 
 var grammar = [
-	'root:{vp}',
-	'vp:{verb} {noun}|{vpinput}',
+	'root:{vp}|{vping}',
+	'vp:{verb} {np}|{vpinput}',
 	'vpinput:{Cartoonish Supervillain Goal (i.e. "take over the world")}|{A Verb and a Noun}',
-	'vping:{verbing} {noun}',
-	'np:{article} {noun}|{article} {adjective} {noun}|{propernoun}|{plural}|{adjective} {plural}|{npinput}',
+	'vping:{verbing} {np}',
+	'np:{npsimple}',
+	'npsimple:{article} {noun}|{article} {adjective} {noun}|{propernoun}|{plural}|{adjective} {plural}|{npinput}|{number} {plural}',
 	'npinput:{Your Clearance Level}',
-	'article:a|the|{number}',
+	'article:a|the',
 	'number:{An Odd Number}|{An Even Number}|{Small Number Greater than 1}|{A Large Number}',
 	'noun:{A Noun}|{Another Noun}|{A type of Food}|{An Animal}|{A Greek Letter}|{A Body Part}|{Another Body Part}|{Object Class}',
 	'propernoun:{name}|{Your Favourite TV Show}|{place}',
@@ -126,9 +127,94 @@ function process_grammar()
 	}
 }
 
-window.onload = process_grammar;
+function init_textarea()
+{
+	var str = '';
+	for (var i = 0; i < inputs.length; i++)
+	{
+		str += inputs[i] + ':\n';
+	}
+	document.getElementById('textinput').value = str;
+}
+
+function on_load()
+{
+	process_grammar();
+	init_textarea();
+}
+
+function parse_inputs()
+{
+	var result = {};
+	var lines = document.getElementById('textinput').value.split('\n');
+	for (var i = 0; i < lines.length; i++)
+	{
+		var line = lines[i];
+		if (line !== '')
+		{
+			var colon = line.indexOf(':');
+			var label = '{' + line.substring(0,colon) + '}';
+			var value = line.substring(colon+1);
+			result[label] = value;
+			if (lookup[label] !== 'INPUT')
+			{
+				alert('Bad label: ' + label);
+				return undefined;
+			}
+		}
+	}
+	for (var label in lookup)
+	{
+		if (lookup[label] === 'INPUT' && (result[label] === undefined || result[label] === ''))
+		{
+			alert('No definition given for ' + label);
+			return undefined;
+		}
+	}
+	return result;
+}
+
+function recurse(label, inputs)
+{
+	if (lookup[label] === undefined)
+	{
+		return label;
+	}
+	else if (lookup[label] === 'INPUT')
+	{
+		return inputs[label];
+	}
+	else
+	{
+		var i = Math.floor(Math.random() * lookup[label].length);
+		var result = '';
+		for (var j = 0; j < lookup[label][i].length; j++)
+		{
+			result += recurse(lookup[label][i][j], inputs);
+		}
+		return result;
+	}
+}
+
+function generate()
+{
+	inputs = parse_inputs();
+
+	var str = '';
+	for (var i = 0; i < 10; i++)
+	{
+		str += recurse('{root}', inputs) + '\n';
+	}
+	document.getElementById('textoutput').value = str;
+}
+
+window.onload = on_load;
 	</script>
 	</head>
 	<body>
+		<textarea id="textinput" rows=10 cols=80></textarea><br>
+		<input type="button" value="Clear" onclick="init_textarea()">
+		<input type="button" value="Generate" onclick="generate()"><br>
+		<textarea id="textoutput" rows=10 cols=80></textarea>
 	</body>
 </html>
