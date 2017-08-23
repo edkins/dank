@@ -1,0 +1,134 @@
+<html>
+	<head>
+		<meta charset="utf-8">
+	<script>
+'use strict';
+var inputs = [
+	'Your Last Name',
+	'An Odd Number',
+	'A Noun',
+	'A type of Food',
+	'A Greek Letter',
+	'Your Favourite TV Show',
+	'An Adjective',
+	'An Animal',
+	'An Even Number',
+	'Something Cheap (Plural)',
+	'A Body Part',
+	'A German Last Name',
+	'An "-ing" Verb',
+	'Non-Proper Noun (Plural)',
+	'Cartoonish Supervillain Goal (i.e. "take over the world")',
+	'Another Verb',
+	'Yet Another Verb',
+	'Your Clearance Level',
+	'A Profession (Plural)',
+	'Object Class',
+	'Small Number Greater than 1',
+	'A Senior Staff Member',
+	'American Football Team',
+	'A Verb and a Noun',
+	'A Famous Person',
+	'A Large Number',
+	'Somewhere Heavily Guarded',
+	'Another Adjective',
+	'A Made-Up Town',
+	'Another "-ing" verb',
+	'A Noun',
+	'Another Noun',
+	'Another Body Part',
+	'Yet Another Noun (plural)'
+	];
+
+var grammar = [
+	'root:{vp}',
+	'vp:{verb} {noun}|{vpinput}',
+	'vpinput:{Cartoonish Supervillain Goal (i.e. "take over the world")}|{A Verb and a Noun}',
+	'vping:{verbing} {noun}',
+	'np:{article} {noun}|{article} {adjective} {noun}|{propernoun}|{plural}|{adjective} {plural}|{npinput}',
+	'npinput:{Your Clearance Level}',
+	'article:a|the|{number}',
+	'number:{An Odd Number}|{An Even Number}|{Small Number Greater than 1}|{A Large Number}',
+	'noun:{A Noun}|{Another Noun}|{A type of Food}|{An Animal}|{A Greek Letter}|{A Body Part}|{Another Body Part}|{Object Class}',
+	'propernoun:{name}|{Your Favourite TV Show}|{place}',
+	'place:{Somewhere Heavily Guarded}|{A Made-Up Town}',
+	'name:Dr. {Your Last Name}|Dr. {A German Last Name}|{A Senior Staff Member}|{American Football Team}|{A Famous Person}',
+	'plural:{Something Cheap (Plural)}|{Non-Proper Noun (Plural)}|{A Profession (Plural)}|{Yet Another Noun (plural)}',
+	'adjective:{An Adjective}|{Another Adjective}',
+	'verbing:{An "-ing" Verb}|{Another "-ing" verb}',
+	'verb:{Another Verb}|{Yet Another Verb}'
+	];
+
+var lookup = {};
+
+function process_grammar()
+{
+	for (var i = 0; i < inputs.length; i++)
+	{
+		var label = '{' + inputs[i] + '}';
+		lookup[label] = 'INPUT';
+	}
+	for (var i = 0; i < grammar.length; i++)
+	{
+		var string = grammar[i];
+		var colon = string.indexOf(':');
+		var label = '{'+string.substring(0, colon)+'}';
+		var things = string.substring(colon+1).split('|');
+		var split_things = [];
+		for (var j = 0; j < things.length; j++)
+		{
+			var regex = /(\{[^}]+\}|[^{]+)/g;
+			var thing = things[j];
+			var result;
+			var split_thing = [];
+			while ((result = regex.exec(thing)) !== null)
+			{
+				var word = result[0];
+				if (word[0] == '{' && !(word in lookup))
+				{
+					lookup[word] = undefined;
+				}
+				split_thing.push(result[0]);
+			}
+			split_things.push(split_thing);
+		}
+		lookup[label] = split_things;
+	}
+
+	for (var label in lookup)
+	{
+		if (lookup[label] === undefined)
+		{
+			console.log('Undefined label:' + label);
+		}
+	}
+	for (var i = 0; i < inputs.length; i++)
+	{
+		var input = '{' + inputs[i] + '}';
+		var found = false;
+		for (var label in lookup)
+		{
+			if (Array.isArray(lookup[label]))
+			{
+				for (var j = 0; j < lookup[label].length; j++)
+				{
+					for (var k = 0; k < lookup[label][j].length; k++)
+					{
+						found |= (lookup[label][j][k] === input);
+					}
+				}
+			}
+		}
+		if (!found)
+		{
+			console.log('Unused input: ' + inputs[i]);
+		}
+	}
+}
+
+window.onload = process_grammar;
+	</script>
+	</head>
+	<body>
+	</body>
+</html>
